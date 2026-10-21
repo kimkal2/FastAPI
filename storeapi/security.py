@@ -1,9 +1,8 @@
 import datetime
 import logging
+from typing import Annotated, Literal
 
-from typing import Optional, Annotated, Literal
-
-from fastapi import Depends, HTTPException, status, Request, WebSocket
+from fastapi import Depends, HTTPException, Request, WebSocket, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
@@ -13,8 +12,8 @@ from storeapi.database import database, user_table
 
 class WebSocketOAuth2PasswordBearer(OAuth2PasswordBearer):
     async def __call__(
-        self, request: Optional[Request] = None, websocket: Optional[WebSocket] = None
-    ) -> Optional[str]:
+        self, request: Request | None = None, websocket: WebSocket | None = None
+    ) -> str | None:
         # If it's a websocket connection, treat it as the request object to read headers
         connection = request or websocket
         return await super().__call__(connection)
@@ -54,7 +53,7 @@ def create_access_token(email: str):
     logger.debug("Creating access token", extra={"email": email})
     print(f" expire {access_token_expire_minutes()}")
 
-    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+    expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
         minutes=access_token_expire_minutes()
     )
     jwt_data = {"sub": email, "exp": expire, "type": "access"}
@@ -66,7 +65,7 @@ def create_confirmation_token(email: str):
     logger.debug("Creating confirmation token", extra={"email": email})
     print(f" expire {confirm_token_expire_minutes()}")
 
-    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+    expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
         minutes=confirm_token_expire_minutes()
     )
     jwt_data = {"sub": email, "exp": expire, "type": "confirmation"}
