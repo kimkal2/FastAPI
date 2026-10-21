@@ -83,3 +83,5 @@ async def test_generate_and_add_to_post(
     query = post_table.select().where(post_table.c.id == created_post["id"])
 
     updated_post = await db.fetch_one(query)
+
+    assert updated_post.image_url == json_data["output_url"]
