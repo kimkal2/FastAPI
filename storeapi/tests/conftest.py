@@ -1,15 +1,13 @@
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-
 from fastapi.testclient import TestClient
-from httpx import AsyncClient, ASGITransport, Request, Response
-
-from storeapi.main import app
+from httpx import ASGITransport, AsyncClient, Request, Response
 
 # from storeapi.routers.post import comment_table, post_table
 from storeapi.database import database, user_table
+from storeapi.main import app
 from storeapi.tests.helpers import create_post
 
 
