@@ -139,7 +139,7 @@ async def test_get_current_user_invalid_token():
 
 @pytest.mark.anyio
 async def test_get_current_user_wrong_type_token(registered_user: dict):
-    token = security.create_confirmation_token(registered_user["email"])
+    security.create_confirmation_token(registered_user["email"])
 
     with pytest.raises(security.HTTPException):
         await security.get_current_user("token")
