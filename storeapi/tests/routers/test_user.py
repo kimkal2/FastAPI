@@ -1,6 +1,6 @@
 import pytest
-from httpx import AsyncClient
 from fastapi import BackgroundTasks
+from httpx import AsyncClient
 
 
 async def register_user(async_client: AsyncClient, email: str, password: str) -> dict:
