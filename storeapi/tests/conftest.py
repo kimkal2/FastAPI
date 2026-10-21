@@ -7,17 +7,21 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport, Request, Response
 
 from storeapi.main import app
+
 # from storeapi.routers.post import comment_table, post_table
 from storeapi.database import database, user_table
 from storeapi.tests.helpers import create_post
+
 
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
 
+
 @pytest.fixture()
-def client() ->Generator:
+def client() -> Generator:
     yield TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 async def db() -> AsyncGenerator:
@@ -25,14 +29,19 @@ async def db() -> AsyncGenerator:
     yield database
     await database.disconnect()
 
+
 @pytest.fixture()
-async def async_client(client) ->AsyncGenerator:
-    async with AsyncClient(transport=ASGITransport(app=app),base_url=client.base_url) as ac:
+async def async_client(client) -> AsyncGenerator:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url=client.base_url
+    ) as ac:
         yield ac
+
 
 @pytest.fixture()
 async def created_post(async_client: AsyncClient, logged_in_token: str):
     return await create_post("Test Post", async_client, logged_in_token)
+
 
 @pytest.fixture()
 async def registered_user(async_client: AsyncClient) -> dict:
@@ -44,20 +53,21 @@ async def registered_user(async_client: AsyncClient) -> dict:
     user_details["id"] = user.id
     return user_details
 
+
 @pytest.fixture()
 async def confirmed_user(registered_user: dict) -> dict:
     query = (
         user_table.update()
         .where(user_table.c.email == registered_user["email"])
         .values(confirmed=True)
-        )
+    )
     await database.execute(query)
     return registered_user
-    
+
 
 @pytest.fixture()
-async def logged_in_token(async_client: AsyncClient, confirmed_user:dict) -> str:
-    
+async def logged_in_token(async_client: AsyncClient, confirmed_user: dict) -> str:
+
     response = await async_client.post("/token", json=confirmed_user)
     return response.json()["access_token"]
 
