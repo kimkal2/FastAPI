@@ -1,56 +1,50 @@
 import logging
 import tempfile
-
-import aiofiles
-
 from enum import Enum
 from typing import Annotated
 
+import aiofiles
 import sqlalchemy
 from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
     HTTPException,
-    status,
     Request,
     UploadFile,
-)
-from storeapi.libs.b2 import b2_upload_file
-
-from storeapi.database import (
-    comment_table,
-    post_table,
-    database,
-    user_table,
-    like_table,
-)
-from storeapi.models.post import (
-    Comment,
-    CommentIn,
-    UserPost,
-    UserPostIn,
-    UserPostWithComments,
-    PostLike,
-    PostLikeIn,
-    UserPostWithLikes,
-)
-from storeapi.security import get_subject_for_token_type, create_confirmation_token
-
-from storeapi.tasks import generate_and_add_to_post
-
-
-from storeapi.models.user import UserIn, User
-from storeapi.security import (
-    get_password_hash,
-    get_user,
-    authenticate_user,
-    create_access_token,
-    oauth2_scheme,
-    get_current_user,
+    status,
 )
 
 from storeapi import tasks
+from storeapi.database import (
+    comment_table,
+    database,
+    like_table,
+    post_table,
+    user_table,
+)
+from storeapi.libs.b2 import b2_upload_file
+from storeapi.models.post import (
+    Comment,
+    CommentIn,
+    PostLike,
+    PostLikeIn,
+    UserPost,
+    UserPostIn,
+    UserPostWithComments,
+    UserPostWithLikes,
+)
+from storeapi.models.user import User, UserIn
+from storeapi.security import (
+    authenticate_user,
+    create_access_token,
+    create_confirmation_token,
+    get_current_user,
+    get_password_hash,
+    get_subject_for_token_type,
+    get_user,
+)
+from storeapi.tasks import generate_and_add_to_post
 
 # app = FastAPI()
 router = APIRouter()
