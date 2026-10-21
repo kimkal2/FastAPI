@@ -73,7 +73,7 @@ async def create_post(
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
     request: Request,
-    prompt: str = None,
+    prompt: str | None = None,
 ):
 
     logger.info("Creating post")
@@ -179,7 +179,7 @@ async def register(user: UserIn, background_tasks: BackgroundTasks, request: Req
 
     logger.debug(query)
 
-    ret_id = await database.execute(query)
+    await database.execute(query)
     background_tasks.add_task(
         tasks.send_user_registration_email,
         user.email,
@@ -256,7 +256,7 @@ async def upload_file(file: UploadFile):
                     await f.write(chunk)
 
             file_url = b2_upload_file(local_file=filename, file_name=file.filename)
-    except Exception:
+    except HTTPException:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="There was an error uploading the file",
