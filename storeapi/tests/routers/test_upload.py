@@ -28,7 +28,7 @@ def aiofiles_mock_open(mocker, fs):
     @contextlib.asynccontextmanager
     async def async_file_open(fname: str, mode: str = "r"):
         out_fs_mock = mocker.AsyncMock(name=f"async_file_open:{fname!r}/{mode!r}")
-        with open(fname, mode) as fin:
+        with open(fname, mode) as fin: # noqa: ASYNC230
             out_fs_mock.read.side_effect = fin.read
             out_fs_mock.write.side_effect = fin.write
             yield out_fs_mock
@@ -42,7 +42,7 @@ async def call_upload_endpoint(
 ):
     return await async_client.post(
         "/upload",
-        files={"file": open(sample_image, "rb")},
+        files={"file": open(sample_image, "rb")}, # noqa: ASYNC230
         headers={"Authorization": f"Bearer {token}"},
     )
 
