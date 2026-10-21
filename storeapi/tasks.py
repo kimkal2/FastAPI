@@ -1,16 +1,20 @@
 import logging
-from storeapi.config import config
-import httpx
 from json import JSONDecodeError
-from databases import Database
+
+import httpx
 from database import post_table
+from databases import Database
+
+from storeapi.config import config
 
 logger = logging.getLogger(__name__)
+
 
 class APIResponseError(Exception):
     pass
 
-async def send_simple_email(to:str, subject:str, body: str):
+
+async def send_simple_email(to: str, subject: str, body: str):
     logger.debug(f"Sending email to '{to[:3]}' with subject '{subject[:20]}'")
     async with httpx.AsyncClient() as client:
         try:
@@ -21,8 +25,8 @@ async def send_simple_email(to:str, subject:str, body: str):
                     "from": f"Jose Savatierra <mailgun@{config.DEV_MAILGUN_DOMAIN}>",
                     "to": [to],
                     "subject": subject,
-                    "text": body
-                }
+                    "text": body,
+                },
             )
             response.raise_for_status()
 
@@ -33,27 +37,29 @@ async def send_simple_email(to:str, subject:str, body: str):
             raise APIResponseError(
                 f"API request failed with status code {err.response.status_code}"
             ) from err
-        
-async def send_user_registration_email(email:str, confirmation_url: str):
+
+
+async def send_user_registration_email(email: str, confirmation_url: str):
     return await send_simple_email(
-            email,
-            "Successfully signed up",
-            (
-                f"Hi {email}! You have successfully signed up to the Stores REST API"
-                " Please confirm your email by clicking on the"
-                f" following link: {confirmation_url}"
-            ),
+        email,
+        "Successfully signed up",
+        (
+            f"Hi {email}! You have successfully signed up to the Stores REST API"
+            " Please confirm your email by clicking on the"
+            f" following link: {confirmation_url}"
+        ),
     )
 
-async def _generate_cute_creature_api(prompt:str):
-    logger.debug(f"Generating cute creature")
+
+async def _generate_cute_creature_api(prompt: str):
+    logger.debug("Generating cute creature")
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 "https://api.deepai.org/api/cute-creature-generator",
                 data={"text": prompt},
                 headers={"api-key": config.DEEPAI_API_KEY},
-                timeout=60     
+                timeout=60,
             )
             logger.debug(response)
             response.raise_for_status()
@@ -63,15 +69,15 @@ async def _generate_cute_creature_api(prompt:str):
                 f"API request failed with status code {err.response.status_code}"
             ) from err
         except (JSONDecodeError, TypeError) as err:
-            raise APIResponseError(f"API response parsing failed") from err
-        
-async def generate_and_add_to_post(
-        email: str,
-        post_id: int,
-        post_url: str,
-        database: Database,
-        prompt: str = "A blue british shorthair cat is sitting on a couch",
+            raise APIResponseError("API response parsing failed") from err
 
+
+async def generate_and_add_to_post(
+    email: str,
+    post_id: int,
+    post_url: str,
+    database: Database,
+    prompt: str = "A blue british shorthair cat is sitting on a couch",
 ):
     try:
         response = await _generate_cute_creature_api(prompt)
@@ -79,19 +85,20 @@ async def generate_and_add_to_post(
         return await send_simple_email(
             email,
             "Error generating image",
-            (f"Hi {email}! Unfortunately there was an error generating an image"
-             " for your post."
+            (
+                f"Hi {email}! Unfortunately there was an error generating an image"
+                " for your post."
             ),
         )
-    
-    logger.debug(f"Connecting to database to update post")
+
+    logger.debug("Connecting to database to update post")
 
     query = (
         post_table.update()
-        .where (post_table.c.id == post_id)
-        .values(image_url = response["output_url"])
+        .where(post_table.c.id == post_id)
+        .values(image_url=response["output_url"])
     )
-    
+
     logger.debug(query)
 
     await database.execute(query)
@@ -99,12 +106,12 @@ async def generate_and_add_to_post(
     logger.debug("Database connection in background task closed")
 
     await send_simple_email(
-            email,
-            "Image generation completed",
-            (
-                f"Hi {email}! Your image has been generated and added to your post"
-                " Please click on the following link to view it: {post_url}"
-            ),
-        )
+        email,
+        "Image generation completed",
+        (
+            f"Hi {email}! Your image has been generated and added to your post"
+            " Please click on the following link to view it: {post_url}"
+        ),
+    )
 
     return response

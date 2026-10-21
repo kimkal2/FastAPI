@@ -1,12 +1,11 @@
-
-
+import contextlib
+import os
 import pathlib
+import tempfile
 
 import pytest
 from httpx import AsyncClient
-import contextlib
-import os
-import tempfile
+
 
 @pytest.fixture()
 def sample_image(fs) -> pathlib.Path:
@@ -14,9 +13,13 @@ def sample_image(fs) -> pathlib.Path:
     fs.create_file(path)
     return path
 
+
 @pytest.fixture(autouse=True)
 def moc_b2_load_file(mocker):
-    return mocker.patch("storeapi.routers.post.b2_upload_file", return_value="https://fakeurl.com")
+    return mocker.patch(
+        "storeapi.routers.post.b2_upload_file", return_value="https://fakeurl.com"
+    )
+
 
 @pytest.fixture()
 def aiofiles_mock_open(mocker, fs):
@@ -25,7 +28,7 @@ def aiofiles_mock_open(mocker, fs):
     @contextlib.asynccontextmanager
     async def async_file_open(fname: str, mode: str = "r"):
         out_fs_mock = mocker.AsyncMock(name=f"async_file_open:{fname!r}/{mode!r}")
-        with open(fname, mode) as fin:
+        with open(fname, mode) as fin: # noqa: ASYNC230
             out_fs_mock.read.side_effect = fin.read
             out_fs_mock.write.side_effect = fin.write
             yield out_fs_mock
@@ -34,24 +37,29 @@ def aiofiles_mock_open(mocker, fs):
     return mock_open
 
 
-async def call_upload_endpoint(async_client: AsyncClient, token: str, sample_image: pathlib.Path):
+async def call_upload_endpoint(
+    async_client: AsyncClient, token: str, sample_image: pathlib.Path
+):
     return await async_client.post(
         "/upload",
-        files= {"file": open(sample_image, "rb")},
-        headers={"Authorization": f"Bearer {token}"}
+        files={"file": open(sample_image, "rb")}, # noqa: ASYNC230
+        headers={"Authorization": f"Bearer {token}"},
     )
 
+
 @pytest.mark.anyio
-async def test_upload_image(async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path):
+async def test_upload_image(
+    async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path
+):
     response = await call_upload_endpoint(async_client, logged_in_token, sample_image)
     assert response.status_code == 201
     assert response.json()["file_url"] == "https://fakeurl.com"
 
+
 @pytest.mark.anyio
-async def test_temp_file_removed_after_upload(async_client: AsyncClient, 
-                                              logged_in_token: str, 
-                                              sample_image: pathlib.Path,
-                                              mocker):
+async def test_temp_file_removed_after_upload(
+    async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path, mocker
+):
     named_temp_file_spy = mocker.spy(tempfile, "NamedTemporaryFile")
 
     response = await call_upload_endpoint(async_client, logged_in_token, sample_image)

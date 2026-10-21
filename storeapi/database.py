@@ -1,5 +1,6 @@
 import databases
 import sqlalchemy
+
 from storeapi.config import config
 
 metadata = sqlalchemy.MetaData()
