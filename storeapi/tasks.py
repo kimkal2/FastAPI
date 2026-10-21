@@ -1,9 +1,11 @@
 import logging
-from storeapi.config import config
-import httpx
 from json import JSONDecodeError
-from databases import Database
+
+import httpx
 from database import post_table
+from databases import Database
+
+from storeapi.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ async def send_user_registration_email(email: str, confirmation_url: str):
 
 
 async def _generate_cute_creature_api(prompt: str):
-    logger.debug(f"Generating cute creature")
+    logger.debug("Generating cute creature")
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
@@ -67,7 +69,7 @@ async def _generate_cute_creature_api(prompt: str):
                 f"API request failed with status code {err.response.status_code}"
             ) from err
         except (JSONDecodeError, TypeError) as err:
-            raise APIResponseError(f"API response parsing failed") from err
+            raise APIResponseError("API response parsing failed") from err
 
 
 async def generate_and_add_to_post(
@@ -89,7 +91,7 @@ async def generate_and_add_to_post(
             ),
         )
 
-    logger.debug(f"Connecting to database to update post")
+    logger.debug("Connecting to database to update post")
 
     query = (
         post_table.update()
